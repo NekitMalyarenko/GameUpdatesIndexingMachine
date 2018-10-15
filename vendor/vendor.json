@@ -1,0 +1,139 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "hHHTARZxoq0Bc3oyU28zZ6GogUg=",
+			"path": "github.com/PuerkitoBio/goquery",
+			"revision": "8311f594d701949445e752a2c4794db4d4a7e204",
+			"revisionTime": "2018-10-03T00:21:05Z"
+		},
+		{
+			"checksumSHA1": "RIh1dcM7jKzdb/ZNYrKn9SaIaCw=",
+			"path": "github.com/andybalholm/cascadia",
+			"revision": "680b6a57bda4f657485ad44bdea42342ead737bc",
+			"revisionTime": "2018-10-12T15:44:24Z"
+		},
+		{
+			"checksumSHA1": "sK2MlzN7a3Df3XPODisfCEqXVec=",
+			"path": "github.com/juju/errors",
+			"revision": "a4583d0a56eac4bdd939e38050d0c69abe0a9b41",
+			"revisionTime": "2018-10-12T00:41:32Z"
+		},
+		{
+			"checksumSHA1": "j+vBozuP9t1baDRdfEykQSP4AGw=",
+			"path": "github.com/lib/pq",
+			"revision": "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79",
+			"revisionTime": "2018-08-23T06:29:44Z"
+		},
+		{
+			"checksumSHA1": "GX2hcQP8YqrXH+laJJIxUFsqoxU=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79",
+			"revisionTime": "2018-08-23T06:29:44Z"
+		},
+		{
+			"checksumSHA1": "UrM9Sbp5q0sBFxqb5iMhqiPpXII=",
+			"path": "golang.org/x/net/html",
+			"revision": "49bb7cea24b1df9410e1712aa6433dae904ff66a",
+			"revisionTime": "2018-10-11T05:27:23Z"
+		},
+		{
+			"checksumSHA1": "xwhqe/igHQrY3IhqDwzo6j7qpm8=",
+			"path": "golang.org/x/net/html/atom",
+			"revision": "49bb7cea24b1df9410e1712aa6433dae904ff66a",
+			"revisionTime": "2018-10-11T05:27:23Z"
+		},
+		{
+			"checksumSHA1": "QS15F7XdFG6tSDF3LfAZJTEgbK8=",
+			"path": "gopkg.in/mgo.v2",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "Np/IH5aN4KNgY+8MBEYV2ewgExI=",
+			"path": "gopkg.in/mgo.v2/bson",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "9tMleZvl/yjpkj7oO3pOfZc+MJw=",
+			"path": "gopkg.in/mgo.v2/internal/json",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "WnXjUmdgl3mTwwqYBxbO974iCe8=",
+			"path": "gopkg.in/mgo.v2/internal/sasl",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "CrciG7woshiINwZxPsxisgDGL3Y=",
+			"path": "gopkg.in/mgo.v2/internal/scram",
+			"revision": "9856a29383ce1c59f308dd1cf0363a79b5bef6b5",
+			"revisionTime": "2018-07-05T11:36:04Z"
+		},
+		{
+			"checksumSHA1": "Gz0OT5F3+f311Mm3jVlHGjzbfWM=",
+			"path": "upper.io/db.v3",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "Mdp5Y4b1gk6YLGctDLAaR/S9Lvs=",
+			"path": "upper.io/db.v3/internal/cache",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "5iNPkW/r/rrNDmJM4Np4f4bVp1E=",
+			"path": "upper.io/db.v3/internal/cache/hashstructure",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "Ca0vXcx8yqqiWBstJpgZ5EJGazk=",
+			"path": "upper.io/db.v3/internal/immutable",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "NN+i6Fr7hjhDRNEXQ/BdipvZwdQ=",
+			"path": "upper.io/db.v3/internal/sqladapter",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "dpmVXnybHcNNE13q5tBcga+oabA=",
+			"path": "upper.io/db.v3/internal/sqladapter/compat",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "eHaQ3AsR0dU0at5LWxVyDKb5jgE=",
+			"path": "upper.io/db.v3/internal/sqladapter/exql",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "J/ouWmwpigmng8TzGQWgLAOqEKY=",
+			"path": "upper.io/db.v3/lib/reflectx",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "btUGwtgq7oh699GqqIWTkA/CdF4=",
+			"path": "upper.io/db.v3/lib/sqlbuilder",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		},
+		{
+			"checksumSHA1": "qFdqygthaHvq7a2NUcfisjpPqmU=",
+			"path": "upper.io/db.v3/postgresql",
+			"revision": "d2cc681b38f69e957b8aeaed84ac923be21b08d0",
+			"revisionTime": "2018-09-25T17:56:02Z"
+		}
+	],
+	"rootPath": "github.com/NekitMalyarenko/GameUpdatesIndexingMachine"
+}
