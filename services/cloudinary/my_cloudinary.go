@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/net/context"
 	"io"
-	"github.com/NekitMalyarenko/GameUpdatesWebsite/services/cloudinary/cloudinary_root"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/cloudinary/cloudinary_root"
 	"strconv"
 	"bytes"
 	"os"
