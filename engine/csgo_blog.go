@@ -79,7 +79,7 @@ func getCSGOBlogUpdate(url string) (update *db.Update, updateHTML string, _ erro
 			update.ShortDes += selection.Text()
 
 			if utf8.RuneCountInString(update.ShortDes) > articles.ShortDesLength - 1 {
-				update.ShortDes = string([]byte(update.ShortDes)[:articles.ShortDesLength - 4]) + "..."
+				update.ShortDes = string([]byte(update.ShortDes)[:articles.ShortDesLength - 3]) + "..."
 			}
 		}
 	})
