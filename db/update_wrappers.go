@@ -120,6 +120,14 @@ func GetUpdateWrappers(id int64, limit int) (updates []*UpdateWrapper, err error
 
 
 func (wrapper *UpdateWrapper) InsertToDB() error {
+	_, err := GetInstance().db.InsertInto("wrappers").Values(wrapper).Exec()
+	if err != nil {
+		return errors.Trace(err)
+	}
+
+	return errors.Trace(GetInstance().db.Collection("wrappers").Find().
+		OrderBy("-id").Limit(1).One(wrapper))
+
 	return errors.Trace(insertToDB("wrappers", wrapper))
 }
 

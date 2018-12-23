@@ -11,8 +11,6 @@ var (
 			Find(cond)
 	}
 
-
-
 	insertToDB = func(table string, val interface{}) error {
 		_, err := GetInstance().db.InsertInto(table).Values(val).
 			Exec()

@@ -13,6 +13,11 @@ import (
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/cloudinary"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/games"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/languages"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/firebase_notifications"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/firebase_topics"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/image_service"
+	"image"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/images"
 )
 
 var (
@@ -66,76 +71,102 @@ func Start() {
 				if hasError {
 					goto exit
 				} else {
-					log.Println("\t\tlatesUpdateId(web):", lastUpdateId, "lastUpdateId(DB):", lastUpdateId)
+					log.Println("\t\tlatesUpdateId(web):", lastUpdateId, "lastUpdateId(DB):", game.GetLastUpdateId(language))
 				}
 
 				if empty || len(game.GetLastUpdateId(language)) == 0 {
 					log.Println("\t\t first update")
 					goto saveUpdate
-				}  else if compare(game.Id, lastUpdateId, game.GetLastUpdateId(language)) {
+				} else if compare(game.Id, lastUpdateId, game.GetLastUpdateId(language)) {
 					log.Println("\t\t new update")
 					goto saveUpdate
 				} else {
-					log.Println("\t\t no new updates",)
+					log.Println("\t\t no new updates", )
 					goto exit
 				}
 
-			saveUpdate: {
-				update, updateHTML, err := getUpdate(game.Id, url)
-				if err != nil {
-					log.Println(errors.Details(err))
-					goto exit
+			saveUpdate:
+				{
+					update, updateHTML, err := getUpdate(game.Id, url)
+					if err != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+					log.Println("\t\tsuccesfully got update")
+
+					/*updateHTML, err = parseImages(updateHTML, lastUpdateId, language, game.Id)
+					if err != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+					log.Println("\t\t successfully parsed images")*/
+
+					//parseAllStringResources(update, language)
+
+					update.URl, err = cloudinary.Save(game.Id, lastUpdateId, language, updateHTML)
+					if err != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+					log.Println("\t\tsuccesfully uploaded on cloudinary")
+
+					err = update.InsertToDB()
+					if err != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+					log.Println("\t\tsuccesfully inserted update in db with id:", update.Id)
+
+					game.UpdateLastUpdateId(language, lastUpdateId)
+					if game.SaveToDB() != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+					log.Println("\t\tsuccesfully updated game latestUpdateId")
+
+					wrapper, err := db.GetUpdateWrapper(game.Id, lastUpdateId)
+					if err != nil {
+						log.Println(errors.Details(err))
+						goto exit
+					}
+
+					if wrapper != nil {
+						wrapper.AddLastUpdates(language, update.Id)
+						wrapper.SaveToDB()
+						log.Println("\t\tsuccesfully updated wrapper")
+					} else {
+						wrapper := new(db.UpdateWrapper)
+						wrapper.GameId = game.Id
+						wrapper.UpdateId = lastUpdateId
+						wrapper.Data.V = make(map[string]interface{})
+						wrapper.AddLastUpdates(language, update.Id)
+						wrapper.InsertToDB()
+						log.Println("\t\tsuccesfully created new wrapper")
+					}
+
+					topic, ok := firebase_topics.Topics[int(game.Id)]
+					if ok {
+						notification := firebase_notifications.NotificationData{
+							Topic: topic,
+							Body: update.Title,
+							Title: "New update in " + game.ShortName,
+							Id: strconv.FormatInt(wrapper.Id, 10),
+						}
+						err = notification.Send()
+						if err != nil {
+							log.Println(errors.Details(errors.Trace(err)))
+						}
+					} else {
+						log.Println("\t\ttopic not found for", game.Id)
+					}
 				}
-				log.Println("\t\tsuccesfully got update")
 
-				//parseAllStringResources(update, language)
-
-				update.URl, err = cloudinary.Save(game.Id, lastUpdateId, language, updateHTML)
-				if err != nil {
-					log.Println(errors.Details(err))
-					goto exit
-				}
-				log.Println("\t\tsuccesfully uploaded on cloudinary")
-
-				err = update.InsertToDB()
-				if err != nil {
-					log.Println(errors.Details(err))
-					goto exit
-				}
-				log.Println("\t\tsuccesfully inserted update in db with id:", update.Id)
-
-				game.UpdateLastUpdateId(language, lastUpdateId)
-				if game.SaveToDB() != nil {
-					log.Println(errors.Details(err))
-					goto exit
-				}
-				log.Println("\t\tsuccesfully updated game latestUpdateId")
-
-				wrapper, err := db.GetUpdateWrapper(game.Id, lastUpdateId)
-				if err != nil {
-					log.Println(errors.Details(err))
-					goto exit
+			exit:
+				{
+					log.Println("\t", language, "took:", time.Now().Minute()-minutes1,
+						"minutes", time.Now().Second()-seconds1, "seconds")
 				}
 
-				if wrapper != nil {
-					wrapper.AddLastUpdates(language, update.Id)
-					wrapper.SaveToDB()
-					log.Println("\t\tsuccesfully updated wrapper")
-				} else {
-					wrapper := new(db.UpdateWrapper)
-					wrapper.GameId = game.Id
-					wrapper.UpdateId = lastUpdateId
-					wrapper.Data.V = make(map[string]interface{})
-					wrapper.AddLastUpdates(language, update.Id)
-					wrapper.InsertToDB()
-					log.Println("\t\tsuccesfully created new wrapper")
-				}
-			}
-
-			exit: {
-				log.Println("\t", language, "took:", time.Now().Minute()-minutes1,
-					"minutes", time.Now().Second()-seconds1, "seconds")
-			}
 			}
 
 			log.Println("indexing for", game.ShortName, "took:", time.Now().Minute() - minutes,
@@ -187,6 +218,57 @@ func compare(gameId int64, updateId1, updateId2 string) bool {
 }
 
 
+func parseImages(updateHTML, lastUpdateId, language string, gameId int64) (string, error){
+	updateDoc, Err := goquery.NewDocumentFromReader(strings.NewReader(updateHTML))
+	if Err != nil {
+		return "", errors.Trace(Err)
+	}
+
+	updateDoc.Find("img").Each(func(imageIndex int, s *goquery.Selection) {
+		if Err != nil {
+			return
+		}
+
+		if language == languages.EN {
+			url, _ := s.Attr("src")
+
+			img, err := downloadImage(url)
+			if err != nil {
+				Err = errors.Trace(err)
+				return
+			}
+
+			resizedImg, err := services.ResizeImage(img, images.Width, images.Height)
+			if err != nil {
+				Err = errors.Trace(err)
+				return
+			}
+
+			_, err = cloudinary.SaveImage(resizedImg, gameId, lastUpdateId, int64(imageIndex))
+			if err != nil {
+				Err = errors.Trace(err)
+				return
+			}
+		}
+
+		// update id need to be string like "12.12.2018"
+		newImageUrl := "/get-image/"+ strconv.FormatInt(gameId, 10) +
+			"/" + lastUpdateId + "/" + strconv.Itoa(imageIndex)
+		s.SetAttr("src", newImageUrl)
+	})
+	if Err != nil {
+		return "", Err
+	}
+
+	updateHTML, Err = updateDoc.Html()
+	if Err != nil {
+		return "", errors.Trace(Err)
+	}
+
+	return updateHTML[25:len(updateHTML)-14], nil
+}
+
+
 func parseAllStringResources(update *db.Update, lang string) {
 
 	switch lang {
@@ -214,4 +296,20 @@ func downloadPage(url string) (*goquery.Document, error) {
 	}
 
 	return goquery.NewDocumentFromReader(res.Body)
+}
+
+
+func downloadImage(url string) (image.Image, error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	defer response.Body.Close()
+
+	img, _, err := image.Decode(response.Body)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	return img, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/languages"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/db"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/articles"
+	"log"
 )
 
 
@@ -18,25 +19,54 @@ func getLastCSGOBlogUpdateId(lang string) (id string, url string, err error) {
 		downloadURL = ""
 	)
 
-	if lang == languages.EN {
+	downloadURL = "http://blog.counter-strike.net/"
+
+	/*if lang == languages.EN {
 		downloadURL = "http://blog.counter-strike.net/"
 	} else {
 		downloadURL = "http://blog.counter-strike.net/" + lang
-	}
+	}*/
 
 	page, err := downloadPage(downloadURL)
 	if err != nil {
 		return "", "", err
 	}
 
-	id = page.Find(".inner_post").Eq(0).Find(".post_date").Text()
-	id = strings.Replace(id, " ", "", -1)
-	id = string([]byte(id)[:len(id) - 1])
+	if lang == languages.EN {
+		id = page.Find(".inner_post").Eq(0).Find(".post_date").Text()
+		id = strings.Replace(id, " ", "", -1)
+		id = string([]byte(id)[:len(id) - 1])
 
-	url, ok = page.Find(".inner_post").Eq(0).Find("h2 a").First().Attr("href")
-	if ok == false {
-		errors.Trace(errors.New("can't get url"))
-		return "", "", err
+		url, ok = page.Find(".inner_post").Eq(0).Find("h2 a").First().Attr("href")
+		if ok == false {
+			errors.Trace(errors.New("can't get url"))
+			return "", "", err
+		}
+	} else {
+		page.Find(".inner_post").Each(func(i int, element *goquery.Selection) {
+			if len(id) == 0 {
+				url, ok = element.Find("h2 a").First().Attr("href")
+				if ok == false {
+					return
+				}
+
+				index := strings.Index(url, "index.php")
+				url = string([]byte(url)[:index]) + lang + "/" + string([]byte(url)[index:])
+
+				log.Println(url)
+
+				_, err := downloadPage(url)
+				if err == nil {
+					id = page.Find(".inner_post").Eq(i).Find(".post_date").Text()
+					id = strings.Replace(id, " ", "", -1)
+					id = string([]byte(id)[:len(id) - 1])
+				}
+			}
+		})
+
+		if len(id) == 0 {
+			return "", "", nil
+		}
 	}
 
 	return
