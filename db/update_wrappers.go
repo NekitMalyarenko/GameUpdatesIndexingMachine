@@ -11,6 +11,7 @@ type UpdateWrapper struct {
 	UpdateId string           `db:"update_id"`
 	GameId   int64			  `db:"game_id"`
 	Data     postgresql.JSONB `db:"data"`
+	Views    int              `db:"views"`
 }
 
 
@@ -125,10 +126,16 @@ func (wrapper *UpdateWrapper) InsertToDB() error {
 		return errors.Trace(err)
 	}
 
-	return errors.Trace(GetInstance().db.Collection("wrappers").Find().
-		OrderBy("-id").Limit(1).One(wrapper))
+	rows, err := GetInstance().db.Select("id").From("wrappers").OrderBy("-id").Limit(1).Query()
+	if err != nil {
+		return errors.Trace(err)
+	}
 
-	return errors.Trace(insertToDB("wrappers", wrapper))
+	if rows.Next() {
+		rows.Scan(&wrapper.Id)
+	}
+
+	return nil
 }
 
 

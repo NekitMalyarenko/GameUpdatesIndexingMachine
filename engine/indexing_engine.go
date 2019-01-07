@@ -8,16 +8,19 @@ import (
 	"github.com/juju/errors"
 	"strconv"
 	"strings"
-
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/db"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/cloudinary"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/games"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/languages"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/image_service"
+	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/images"
+)
+
+import _ "image/jpeg"
+import (
+	_ "image/png"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/firebase_notifications"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/firebase_topics"
-	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/services/image_service"
-	"image"
-	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/images"
 )
 
 var (
@@ -94,12 +97,12 @@ func Start() {
 					}
 					log.Println("\t\tsuccesfully got update")
 
-					/*updateHTML, err = parseImages(updateHTML, lastUpdateId, language, game.Id)
+					updateHTML, err = parseImages(update, updateHTML, lastUpdateId, language, game.Id)
 					if err != nil {
 						log.Println(errors.Details(err))
 						goto exit
 					}
-					log.Println("\t\t successfully parsed images")*/
+					log.Println("\t\tsuccessfully parsed images")
 
 					//parseAllStringResources(update, language)
 
@@ -135,29 +138,35 @@ func Start() {
 						wrapper.SaveToDB()
 						log.Println("\t\tsuccesfully updated wrapper")
 					} else {
-						wrapper := new(db.UpdateWrapper)
+						wrapper = new(db.UpdateWrapper)
 						wrapper.GameId = game.Id
 						wrapper.UpdateId = lastUpdateId
 						wrapper.Data.V = make(map[string]interface{})
 						wrapper.AddLastUpdates(language, update.Id)
-						wrapper.InsertToDB()
+						err = wrapper.InsertToDB()
+						if err != nil {
+							log.Println(errors.Details(err))
+							goto exit
+						}
 						log.Println("\t\tsuccesfully created new wrapper")
 					}
 
-					topic, ok := firebase_topics.Topics[int(game.Id)]
-					if ok {
-						notification := firebase_notifications.NotificationData{
-							Topic: topic,
-							Body: update.Title,
-							Title: "New update in " + game.ShortName,
-							Id: strconv.FormatInt(wrapper.Id, 10),
+					if language == languages.EN {
+						topic, ok := firebase_topics.Topics[int(game.Id)]
+						if ok  {
+							notification := firebase_notifications.NotificationData{
+								Topic: topic,
+								Body: update.Title,
+								Title: "New update in " + game.ShortName,
+								Id: strconv.FormatInt(wrapper.Id, 10),
+							}
+							err = notification.Send()
+							if err != nil {
+								log.Println(errors.Details(errors.Trace(err)))
+							}
+						} else {
+							log.Println("\t\ttopic not found for", game.Id)
 						}
-						err = notification.Send()
-						if err != nil {
-							log.Println(errors.Details(errors.Trace(err)))
-						}
-					} else {
-						log.Println("\t\ttopic not found for", game.Id)
 					}
 				}
 
@@ -186,6 +195,9 @@ func getLastUpdateId(gameId int64, lang string) (id string, url string, err erro
 	case games.CsgoBlog:
 		return getLastCSGOBlogUpdateId(lang)
 
+	case games.Fortnite:
+		return getLastFortniteUpdateId(lang)
+
 	default:
 		return
 	}
@@ -198,6 +210,9 @@ func getUpdate(gameId int64, url string) (update *db.Update, updateHTML string, 
 
 	case games.CsgoBlog:
 		return getCSGOBlogUpdate(url)
+
+	case games.Fortnite:
+		return getFortniteUpdate(url)
 
 	default:
 		return
@@ -212,17 +227,26 @@ func compare(gameId int64, updateId1, updateId2 string) bool {
 	case games.CsgoBlog:
 		return compareCSGOBlog(updateId1, updateId2)
 
+	case games.Fortnite:
+		return updateId1 != updateId2
+
 	default:
 		return false
 	}
 }
 
 
-func parseImages(updateHTML, lastUpdateId, language string, gameId int64) (string, error){
+func parseImages(update *db.Update, updateHTML, lastUpdateId, language string, gameId int64) (string, error) {
 	updateDoc, Err := goquery.NewDocumentFromReader(strings.NewReader(updateHTML))
 	if Err != nil {
 		return "", errors.Trace(Err)
 	}
+
+	var (
+		url string
+		ok  bool
+	)
+
 
 	updateDoc.Find("img").Each(func(imageIndex int, s *goquery.Selection) {
 		if Err != nil {
@@ -230,34 +254,60 @@ func parseImages(updateHTML, lastUpdateId, language string, gameId int64) (strin
 		}
 
 		if language == languages.EN {
-			url, _ := s.Attr("src")
+			url, ok = s.Attr("src")
+			if ok {
+				img, err := image_service.DownloadImage(url)
+				if err != nil {
+					Err = errors.Trace(err)
+					return
+				}
 
-			img, err := downloadImage(url)
-			if err != nil {
-				Err = errors.Trace(err)
-				return
-			}
+				resizedImg, err := image_service.ResizeImage(img, images.Width, images.Height)
+				if err != nil {
+					Err = errors.Trace(err)
+					return
+				}
 
-			resizedImg, err := services.ResizeImage(img, images.Width, images.Height)
-			if err != nil {
-				Err = errors.Trace(err)
-				return
-			}
-
-			_, err = cloudinary.SaveImage(resizedImg, gameId, lastUpdateId, int64(imageIndex))
-			if err != nil {
-				Err = errors.Trace(err)
-				return
+				_, err = cloudinary.SaveImage(resizedImg, gameId, lastUpdateId, int64(imageIndex + 1))
+				if err != nil {
+					Err = errors.Trace(err)
+					return
+				}
 			}
 		}
 
 		// update id need to be string like "12.12.2018"
-		newImageUrl := "/get-image/"+ strconv.FormatInt(gameId, 10) +
-			"/" + lastUpdateId + "/" + strconv.Itoa(imageIndex)
+		newImageUrl := "/getImage/"+ strconv.FormatInt(gameId, 10) +
+			"/" + lastUpdateId + "/" + strconv.Itoa(imageIndex + 1)
 		s.SetAttr("src", newImageUrl)
+
+		if update.TitleImg == url {
+			update.TitleImg = newImageUrl
+		}
 	})
 	if Err != nil {
 		return "", Err
+	}
+
+	if !strings.Contains(update.TitleImg, "/getImage/" +
+		strconv.FormatInt(gameId, 10) + "/"+ lastUpdateId + "/") {
+		img, err := image_service.DownloadImage(update.TitleImg)
+		if err != nil {
+			return "", errors.Trace(err)
+		}
+
+		resizedImg, err := image_service.ResizeImage(img, images.Width, images.Height)
+		if err != nil {
+			return "", errors.Trace(err)
+		}
+
+		_, err = cloudinary.SaveImage(resizedImg, gameId, lastUpdateId,0)
+		if err != nil {
+			return "", errors.Trace(err)
+		}
+
+		update.TitleImg =  "/getImage/"+ strconv.FormatInt(gameId, 10) +
+			"/" + lastUpdateId + "/0"
 	}
 
 	updateHTML, Err = updateDoc.Html()
@@ -296,20 +346,4 @@ func downloadPage(url string) (*goquery.Document, error) {
 	}
 
 	return goquery.NewDocumentFromReader(res.Body)
-}
-
-
-func downloadImage(url string) (image.Image, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	defer response.Body.Close()
-
-	img, _, err := image.Decode(response.Body)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-
-	return img, nil
 }

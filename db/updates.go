@@ -13,7 +13,7 @@ type Update struct {
 
 	Date      string `db:"date"      json:"date"`
 	Title     string `db:"title"     json:"title"`
-	TitleImg *string `db:"title_img" json:"title_img"`
+	TitleImg  string `db:"title_img" json:"title_img"`
 	ShortDes  string `db:"short_des" json:"short_des"`
 
 	Views    int `db:"views"    json:"views"`

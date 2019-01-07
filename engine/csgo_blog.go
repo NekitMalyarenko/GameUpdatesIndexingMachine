@@ -9,7 +9,6 @@ import (
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/languages"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/db"
 	"github.com/NekitMalyarenko/GameUpdatesIndexingMachine/const/articles"
-	"log"
 )
 
 
@@ -27,9 +26,9 @@ func getLastCSGOBlogUpdateId(lang string) (id string, url string, err error) {
 		downloadURL = "http://blog.counter-strike.net/" + lang
 	}*/
 
-	page, err := downloadPage(downloadURL)
-	if err != nil {
-		return "", "", err
+	page, Err := downloadPage(downloadURL)
+	if Err != nil {
+		return "", "", errors.Trace(Err)
 	}
 
 	if lang == languages.EN {
@@ -53,8 +52,7 @@ func getLastCSGOBlogUpdateId(lang string) (id string, url string, err error) {
 				index := strings.Index(url, "index.php")
 				url = string([]byte(url)[:index]) + lang + "/" + string([]byte(url)[index:])
 
-				log.Println(url)
-
+				//log.Println(url)
 				_, err := downloadPage(url)
 				if err == nil {
 					id = page.Find(".inner_post").Eq(i).Find(".post_date").Text()
@@ -107,6 +105,7 @@ func getCSGOBlogUpdate(url string) (update *db.Update, updateHTML string, _ erro
 			return
 		}  else {
 			update.ShortDes += selection.Text()
+			update.ShortDes = strings.Replace(update.ShortDes, "\n", "", -1)
 
 			if utf8.RuneCountInString(update.ShortDes) > articles.ShortDesLength - 1 {
 				update.ShortDes = string([]byte(update.ShortDes)[:articles.ShortDesLength - 3]) + "..."
@@ -116,9 +115,9 @@ func getCSGOBlogUpdate(url string) (update *db.Update, updateHTML string, _ erro
 
 	if page.Find(".inner_post p img").Size() > 1 {
 		raw, _ := page.Find(".inner_post img").Eq(1).Attr("src")
-		update.TitleImg = &raw
+		update.TitleImg = raw
 	} else {
-		update.TitleImg = nil
+		update.TitleImg = ""
 	}
 
 	return update, updateHTML, errors.Trace(err)

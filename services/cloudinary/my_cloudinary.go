@@ -25,7 +25,7 @@ func Save(gameId int64, updateId, lang, updateHTML string) (url string, err erro
 }
 
 
-func SaveImage(image []byte,gameId int64,updateId string,imageId int64)(url string,err error){
+func SaveImage(image []byte,gameId int64,updateId string,imageId int64) (url string,err error) {
 	ctx := context.Background()
 	ctx = cloudinary_root.NewContext(ctx,os.Getenv("cloudinary"))
 
