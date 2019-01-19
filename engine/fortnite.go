@@ -27,7 +27,7 @@ func getLastFortniteUpdateId(lang string) (id string, url string, _ error) {
 		return "", "", err
 	}
 
-	root := page.Find(".top-featured-activity").Eq(0).Find("a").Eq(0)
+	root := page.Find(".grid-layout.container-fluid .row a").Eq(0)
 
 	url, ok = root.Attr("href")
 	if !ok {
@@ -63,6 +63,7 @@ func getFortniteUpdate(url string) (update *db.Update, updateHTML string, _ erro
 				return "01.02.2016"
 			}
 		}()
+		log.Println("layout:", layout)
 
 		rawDate, err := time.Parse(layout,  page.Find(".blog-header-info .blog-header-date").Text())
 		if err != nil {
