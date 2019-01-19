@@ -56,7 +56,7 @@ func getFortniteUpdate(url string) (update *db.Update, updateHTML string, _ erro
 	if strings.Contains(url ,"news") {
 		update.Title = page.Find(".blog-header-info .blog-header-title").Text()
 
-		rawDate, err := time.Parse("02.01.2016",  page.Find(".blog-header-info .blog-header-date").Text())
+		rawDate, err := time.Parse("01.02.2016",  page.Find(".blog-header-info .blog-header-date").Text())
 		if err != nil {
 			return nil, "", errors.Trace(err)
 		}
