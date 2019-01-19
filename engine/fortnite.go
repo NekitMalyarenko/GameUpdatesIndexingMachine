@@ -27,7 +27,7 @@ func getLastFortniteUpdateId(lang string) (id string, url string, _ error) {
 		return "", "", err
 	}
 
-	root := page.Find("#qa-banner-the-block")
+	root := page.Find("#qa-banner-itemized-glider-redeploy")
 
 	url, ok = root.Attr("href")
 	if !ok {
