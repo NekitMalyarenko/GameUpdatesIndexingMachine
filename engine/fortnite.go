@@ -27,7 +27,14 @@ func getLastFortniteUpdateId(lang string) (id string, url string, _ error) {
 		return "", "", err
 	}
 
-	root := page.Find(".grid-layout.container-fluid .row a").Eq(0)
+	var root *goquery.Selection
+
+	root = page.Find(".top-featured-activity a")
+	if len(root.Nodes) == 0 {
+		root = page.Find(".grid-layout.container-fluid .row a").Eq(0)
+	}
+
+	root = page.Find(".grid-layout.container-fluid .row a").Eq(0)
 
 	url, ok = root.Attr("href")
 	if !ok {
