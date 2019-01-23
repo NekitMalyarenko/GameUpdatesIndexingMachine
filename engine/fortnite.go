@@ -34,8 +34,6 @@ func getLastFortniteUpdateId(lang string) (id string, url string, _ error) {
 		root = page.Find(".grid-layout.container-fluid .row a").Eq(0)
 	}
 
-	root = page.Find(".grid-layout.container-fluid .row a").Eq(0)
-
 	url, ok = root.Attr("href")
 	if !ok {
 		return "", "", errors.Trace(errors.New("href is empty"))
