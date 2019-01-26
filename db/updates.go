@@ -16,9 +16,9 @@ type Update struct {
 	TitleImg  string `db:"title_img" json:"title_img"`
 	ShortDes  string `db:"short_des" json:"short_des"`
 
-	Views    int `db:"views"    json:"views"`
+	/*Views    int `db:"views"    json:"views"`
 	Likes    int `db:"likes"    json:"likes"`
-	Dislikes int `db:"dislikes" json:"dislikes"`
+	Dislikes int `db:"dislikes" json:"dislikes"`*/
 }
 
 
