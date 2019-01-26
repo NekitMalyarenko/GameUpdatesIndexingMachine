@@ -142,6 +142,8 @@ func Start() {
 						wrapper.GameId = game.Id
 						wrapper.UpdateId = lastUpdateId
 						wrapper.Data.V = make(map[string]interface{})
+						wrapper.Likes.V = make([]interface{}, 0)
+						wrapper.Dislikes.V =  make([]interface{}, 0)
 						wrapper.AddLastUpdates(language, update.Id)
 						err = wrapper.InsertToDB()
 						if err != nil {

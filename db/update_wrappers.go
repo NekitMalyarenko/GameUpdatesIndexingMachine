@@ -12,6 +12,8 @@ type UpdateWrapper struct {
 	GameId   int64			  `db:"game_id"`
 	Data     postgresql.JSONB `db:"data"`
 	Views    int              `db:"views"`
+	Likes    postgresql.JSONB `db:"likes"`
+	Dislikes postgresql.JSONB `db:"dislikes"`
 }
 
 
