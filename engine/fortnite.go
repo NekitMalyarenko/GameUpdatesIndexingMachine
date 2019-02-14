@@ -61,18 +61,39 @@ func getFortniteUpdate(url string) (update *db.Update, updateHTML string, _ erro
 	if strings.Contains(url ,"news") {
 		update.Title = page.Find(".blog-header-info .blog-header-title").Text()
 
-		layout := func() string {
-			if strings.Contains(url, "/en-US/") {
-				return "02.01.2016"
-			} else {
-				return "01.02.2016"
-			}
-		}()
-		log.Println("layout:", layout)
+		//01 - Month
+		//02 - Day
+		layout := func(hasError bool) string {
 
-		rawDate, err := time.Parse(layout,  page.Find(".blog-header-info .blog-header-date").Text())
+			if !hasError {
+				if strings.Contains(url, "/en-US/") {
+					return "01.02.2016"
+				} else {
+					return "02.01.2016"
+				}
+			} else {
+				if strings.Contains(url, "/en-US/") {
+					return "1.2.2016"
+				} else {
+					return "2.1.2016"
+				}
+			}
+
+		}
+		log.Println("layout:", layout(false))
+
+		var (
+			rawDate time.Time
+			err     error
+		)
+
+		rawDate, err = time.Parse(layout(false),  page.Find(".blog-header-info .blog-header-date").Text())
 		if err != nil {
-			return nil, "", errors.Trace(err)
+			log.Println("layout:", layout(false))
+			rawDate, err = time.Parse(layout(true),  page.Find(".blog-header-info .blog-header-date").Text())
+			if err != nil {
+				 return nil, "", errors.Trace(err)
+			}
 		}
 
 		update.Date = rawDate.Format("2006-01-02")
